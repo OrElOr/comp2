@@ -70,5 +70,5 @@ public class TimeCheck {
 
     }
 }
-//수정되나??
+//수정되나??kjkjk
 // alt + shift 위아래 옮기기.
