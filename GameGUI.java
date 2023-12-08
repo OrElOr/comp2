@@ -18,10 +18,12 @@ public class GameGUI {
     private JPanel chatP,gameP;
     private JScrollPane scroll,scroll2;
     //private JLabel timecount;
+    private String username;
 
-    public GameGUI(BufferedReader reader, PrintWriter writer){
+    public GameGUI(BufferedReader reader, PrintWriter writer, String username){
         this.reader = reader;
         this.writer = writer;
+        this.username = username;
     }
 
     public void init() {
@@ -37,7 +39,7 @@ public class GameGUI {
         inputField.addActionListener(e->{//enter 쳐도 입력가능하게
             String word = inputField.getText();
             sendMessage(word);
-                });
+        });
 
         gameinputField.addActionListener(e->{//enter 쳐도 입력가능하게
             String gameword = gameinputField.getText();
