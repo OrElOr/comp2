@@ -5,47 +5,67 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-public class GameGUI {
+public class GameGUI extends JFrame{
     private BufferedReader reader;
-    private PrintWriter writer;
+    private BufferedWriter writer;
 
-    private JFrame frame;
     private JTextField inputField,gameinputField;
     private JTextArea chatArea,preanswer;
     private JPanel chatP,gameP;
     private JScrollPane scroll,scroll2;
-    //private JLabel timecount;
     private String username;
+    private JLabel targetword;
+    private String tgw;
 
-    public GameGUI(BufferedReader reader, PrintWriter writer, String username){
+    public GameGUI(BufferedReader reader, BufferedWriter writer, String username){
         this.reader = reader;
         this.writer = writer;
         this.username = username;
     }
 
     public void init() {
-        frame = new JFrame("끝말잇기 게임");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400, 600);
-        frame.setResizable(false);
-        frame.setLayout(new GridLayout(2,1));
+        setTitle(username +"님의 끝말잇기 게임");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(400, 600);
+        setResizable(false);
+        setLayout(new GridLayout(2,1));
 
         inputField = new JTextField();
         gameinputField = new JTextField();
 
-        inputField.addActionListener(e->{//enter 쳐도 입력가능하게
-            String word = inputField.getText();
-            sendMessage(word);
+        inputField.addActionListener(e->{
+            String chatword = inputField.getText();
+            try {
+                System.out.println(1);
+                writer.write(chatword);
+                System.out.println(2);
+                writer.newLine();
+                writer.flush();
+                System.out.println(3);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+            inputField.setText(""); // 엔터치고 textfield지우기
         });
 
-        gameinputField.addActionListener(e->{//enter 쳐도 입력가능하게
+        gameinputField.addActionListener(e->{
             String gameword = gameinputField.getText();
-            System.out.println(gameword); //여기서 텍스트가 조건을 통과하면 입력되도록
-            preanswer.append(gameword+", ");
-            gameinputField.setText("");
+            //예외처리
+            try {
+                System.out.println(1);
+                writer.write("Game:" + gameword);
+                System.out.println(2+" gameword= "+gameword);
+                writer.newLine();
+                writer.flush();
+                System.out.println(3);
+            } catch (IOException ioe){
+                ioe.printStackTrace();
+            }
+            gameinputField.setText(""); // 엔터치고 textfield지우기
         });
 
         chatArea = new JTextArea();
@@ -59,28 +79,21 @@ public class GameGUI {
 
 
 
-
-
-
-
-
         gameP = new JPanel();
         gameP.setSize(400,300);
         gameP.setLayout(new BorderLayout());
         gameP.setBackground(Color.WHITE);
 
-        JButton targetword = new JButton("targetword");
-        targetword.setFocusable(false);
-
-        targetword.setSize(150,100);
+        //위치 가운데로
+        targetword = new JLabel("targetword");
         gameP.add(targetword,BorderLayout.CENTER);
         gameP.add(scroll2,BorderLayout.NORTH);
 
         //timecount = new JLabel("timer");
         //timecount.setPreferredSize(new Dimension(50,50));
         //gameP.add(timecount,null);
-        // timecount.setLocation(200,200);
-        frame.add(gameP);
+        //timecount.setLocation(200,200);
+        add(gameP);
 
         JPanel gameChatP = new JPanel();
         gameChatP.setLayout(new BorderLayout());
@@ -103,7 +116,7 @@ public class GameGUI {
         chatP.setLayout(new BorderLayout());
         chatP.add(scroll, BorderLayout.CENTER); //스크롤 기능이 있는 textfiled 추가
         chatP.add(panel, BorderLayout.SOUTH);
-        frame.add(chatP);
+        add(chatP);
 
         /*
         frame.getContentPane().setLayout(new BorderLayout());
@@ -111,7 +124,7 @@ public class GameGUI {
         frame.getContentPane().add(panel, BorderLayout.SOUTH);
          */
 
-        frame.setVisible(true);
+        setVisible(true);
 
         // 서버로부터 메시지 수신을 위한 스레드 시작
         new Thread(new Runnable() {
@@ -122,17 +135,22 @@ public class GameGUI {
         }).start();
     }
 
-    private void sendMessage(String message) {
-        writer.println(message);
-        inputField.setText("");
-    }
-
-    private void receiveMessages() {
+    public void receiveMessages() {
         try {
             while (true) {
+                System.out.println("recevieMessages 메서드 시작");
                 String message = reader.readLine();
-                if (message != null) {
-                    chatArea.append(message + "\n");
+                if(message.startsWith("Game:")) {
+                    //targetword로 setText
+                    System.out.println(5);
+                    tgw = message.replace("Game:","");//받은 message에서 Game:를 제거한 String
+                    targetword.setText(tgw);
+                    preanswer.append(tgw+", "); //위에서 받은 String을 상단 정답 textarea에 추가함
+
+                } else {
+                    System.out.println(5);
+                    chatArea.append(message); //받은 message를 chatArea에 추가함
+
                 }
             }
         } catch (IOException e) {
@@ -140,3 +158,4 @@ public class GameGUI {
         }
     }
 }
+
