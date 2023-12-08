@@ -17,9 +17,9 @@ public class GameGUI {
     private JTextArea chatArea,preanswer;
     private JPanel chatP,gameP;
     private JScrollPane scroll,scroll2;
-    private JLabel timecount;
+    //private JLabel timecount;
 
-    public GameGUI(BufferedReader reader, PrintWriter writer) {
+    public GameGUI(BufferedReader reader, PrintWriter writer){
         this.reader = reader;
         this.writer = writer;
     }
@@ -42,7 +42,7 @@ public class GameGUI {
         gameinputField.addActionListener(e->{//enter 쳐도 입력가능하게
             String gameword = gameinputField.getText();
             System.out.println(gameword); //여기서 텍스트가 조건을 통과하면 입력되도록
-            preanswer.append(", "+gameword);
+            preanswer.append(gameword+", ");
             gameinputField.setText("");
         });
 
@@ -59,25 +59,8 @@ public class GameGUI {
 
 
 
-        JButton submitButton = new JButton("제출");
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String word = inputField.getText();
-                sendMessage(word);
-            }
-        });
 
-        JButton gamesubmitButton = new JButton("제출");
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String gameword = gameinputField.getText();
-                System.out.println(gameword);//여기서 텍스트가 조건을 통과하면 입력되도록
-                preanswer.append(", "+gameword);
-                gameinputField.setText("");
-            }
-        });
+
 
         gameP = new JPanel();
         gameP.setSize(400,300);
@@ -100,8 +83,6 @@ public class GameGUI {
         JPanel gameChatP = new JPanel();
         gameChatP.setLayout(new BorderLayout());
         gameChatP.add(gameinputField, BorderLayout.CENTER);
-        gameChatP.add(gamesubmitButton, BorderLayout.EAST);
-
 
         gameP.add(gameChatP, BorderLayout.SOUTH);
 
@@ -113,7 +94,6 @@ public class GameGUI {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.add(inputField, BorderLayout.CENTER);
-        panel.add(submitButton, BorderLayout.EAST);
 
         chatP = new JPanel();
         chatP.setSize(400,300);
