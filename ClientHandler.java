@@ -38,13 +38,17 @@ public class ClientHandler implements Runnable {
                 writer.println("서버 응답: " + message);
             }
         } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                clientSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            System.out.println("클라이언트 종료");
+
+            if (!clientSocket.isClosed()) {
+                try {
+                    clientSocket.close();
+                } catch(IOException ex) {
+                    System.err.println("소켓 닫기 실패");
+                }
             }
+
         }
     }
 }
+
