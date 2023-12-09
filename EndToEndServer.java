@@ -28,7 +28,6 @@ public class EndToEndServer {
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
 
                 new Thread(clientHandler).start();
-                System.out.println("clientHandler 스레드 시작");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,7 +58,6 @@ public class EndToEndServer {
         public ClientHandler(Socket clientSocket) {
             try {
                 reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                System.out.println("reader 선언");
                 this.clientSocket = clientSocket;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -71,13 +69,9 @@ public class EndToEndServer {
             try {
                 String message;
                 String tryword;
-                System.out.println("run함수 시작");
-                System.out.println(0);
                 while ((message = reader.readLine()) != null) {
-                    System.out.println(1);
 
                     if (message.startsWith("Game:")) { // Game에서 온 문자인 경우
-                        System.out.println("게임에서 온 문자");
                         tryword = message.replace("Game:", "");//message에서 Game: 를 없애줌
                         logic(tryword);
                     } else if(message.equals("GetTargetWord")) {
@@ -86,7 +80,6 @@ public class EndToEndServer {
                         writer.newLine();
                         writer.flush();
                     } else { // Chat에서 온 문자인 경우
-                        System.out.println("채팅에서 온 문자");
                         chatbroadcast(message);
                     }
                 }
@@ -109,26 +102,22 @@ public class EndToEndServer {
             //backword(기존단어), word(사용자가 입력한 단어)
             //끝말잇기 로직구현
             //만족한다면 word를 매개변수로 gamewordbroadcast함수호출
-//            System.out.println("로직 함수 시작");
 //            try {
 //                gamewordbroadcast(word);
 //            }catch (IOException e) {
 //                e.printStackTrace();
 //            }
-//            System.out.println("로직 함수 종료");
         }
 
         //inputField에서 보낸 문자를 다른 클라이언트들에게 전송하는 메서드
         private void chatbroadcast(String message) throws IOException{
             clients.removeIf(Socket::isClosed);
             for(Socket client : clients) {
-                System.out.println(4);
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
 
                 writer.write(message);
                 writer.newLine();
                 writer.flush();
-                System.out.println("write완료");
             }
         }
 
@@ -137,7 +126,6 @@ public class EndToEndServer {
         private void gamewordbroadcast(String message) throws IOException{
             clients.removeIf(Socket::isClosed);
             for(Socket client : clients) {
-                System.out.println("게임브로드캐스트 시작");
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
                 writer.write("Game:"+ message);
                 writer.newLine();
