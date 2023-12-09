@@ -40,12 +40,9 @@ public class GameGUI extends JFrame{
         inputField.addActionListener(e->{
             String chatword = inputField.getText();
             try {
-                System.out.println(1);
                 writer.write(chatword);
-                System.out.println(2);
                 writer.newLine();
                 writer.flush();
-                System.out.println(3);
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
@@ -56,12 +53,9 @@ public class GameGUI extends JFrame{
             String gameword = gameinputField.getText();
             //예외처리
             try {
-                System.out.println(1);
                 writer.write("Game:" + gameword);
-                System.out.println(2+" gameword= "+gameword);
                 writer.newLine();
                 writer.flush();
-                System.out.println(3);
             } catch (IOException ioe){
                 ioe.printStackTrace();
             }
@@ -85,7 +79,7 @@ public class GameGUI extends JFrame{
         gameP.setBackground(Color.WHITE);
 
         //위치 가운데로
-        targetword = new JLabel("targetword");
+        targetword = new JLabel(initTargetword());
         gameP.add(targetword,BorderLayout.CENTER);
         gameP.add(scroll2,BorderLayout.NORTH);
 
@@ -100,9 +94,6 @@ public class GameGUI extends JFrame{
         gameChatP.add(gameinputField, BorderLayout.CENTER);
 
         gameP.add(gameChatP, BorderLayout.SOUTH);
-
-
-
 
 
         //chatP 영역 아래 채팅 입력 부분.
@@ -142,20 +133,32 @@ public class GameGUI extends JFrame{
                 String message = reader.readLine();
                 if(message.startsWith("Game:")) {
                     //targetword로 setText
-                    System.out.println(5);
                     tgw = message.replace("Game:","");//받은 message에서 Game:를 제거한 String
                     targetword.setText(tgw);
                     preanswer.append(tgw+", "); //위에서 받은 String을 상단 정답 textarea에 추가함
 
                 } else {
-                    System.out.println(5);
-                    chatArea.append(message); //받은 message를 chatArea에 추가함
+                    chatArea.append(message+"\n"); //받은 message를 chatArea에 추가함
 
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public String initTargetword() {
+        try {
+            writer.write("GetTargetWord");
+            writer.newLine();
+            writer.flush();
+            // 스택에서 현재 타겟 단어를 읽음
+            String targetWord = reader.readLine();
+            return targetWord;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
 
