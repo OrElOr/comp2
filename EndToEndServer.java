@@ -48,10 +48,10 @@ public class EndToEndServer {
         }
     }
 
-    public void initTargetword() {
-
+     public static void main(String[] args) {
+        new EndToEndServer();
     }
-
+    
     private static class ClientHandler implements Runnable {
         private Socket clientSocket;
         private BufferedReader reader;
@@ -80,11 +80,15 @@ public class EndToEndServer {
                         System.out.println("게임에서 온 문자");
                         tryword = message.replace("Game:", "");//message에서 Game: 를 없애줌
                         logic(tryword);
-
+                    } else if(message.equals("GetTargetWord")) {
+                        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                        writer.write(stack.peek());
+                        writer.newLine();
+                        writer.flush();
                     } else { // Chat에서 온 문자인 경우
                         System.out.println("채팅에서 온 문자");
                         chatbroadcast(message);
-                        }
+                    }
                 }
             } catch (IOException e) {
                 System.out.println("클라이언트 종료");
@@ -140,23 +144,5 @@ public class EndToEndServer {
                 writer.flush();
             }
         }
-
-        //        private void chatbroadcast(String message){
-//            clients.removeIf(Socket::isClosed); // Socket이 닫혀있다면 clients에서 삭제
-//            for (Socket client : clients) {
-//                try {
-//                    PrintWriter out = new PrintWriter(client.getOutputStream());
-//                    out.println(message);
-//                    out.flush();
-//                }
-//                catch (IOException e){
-//                }
-//            }
-//        }
-
-    }
-
-    public static void main(String[] args) {
-        new EndToEndServer();
     }
 }
