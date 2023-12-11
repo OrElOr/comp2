@@ -160,7 +160,8 @@ public class GameGUI extends JFrame{
             e.printStackTrace();
         }
     }
-    
+
+    //새로 들어온 클라이언트 targetword초기화 메서드
     public String initTargetword() {
         try {
             writer.write("GetTargetWord");
