@@ -26,6 +26,9 @@ public class EndToEndClient {
             if(username == null) {
                 System.exit(0);
             }
+
+
+
             //게임 GUI생성
             GameGUI gameGUI = new GameGUI(reader, writer,username);
             gameGUI.init();

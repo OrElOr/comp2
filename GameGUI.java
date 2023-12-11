@@ -40,7 +40,7 @@ public class GameGUI extends JFrame{
         inputField.addActionListener(e->{
             String chatword = inputField.getText();
             try {
-                writer.write(chatword);
+                writer.write(username+":"+chatword);
                 writer.newLine();
                 writer.flush();
             } catch (IOException ioe) {
@@ -116,6 +116,20 @@ public class GameGUI extends JFrame{
          */
 
         setVisible(true);
+
+
+        try{ //입장 메세지 출력
+                writer.write(username+" 님이 입장했습니다.");
+                writer.newLine();
+                writer.flush();}
+            catch (IOException e){
+                e.printStackTrace();
+        }
+
+
+
+
+
 
         // 서버로부터 메시지 수신을 위한 스레드 시작
         new Thread(new Runnable() {
