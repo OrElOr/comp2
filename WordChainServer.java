@@ -52,7 +52,7 @@ public class WordChainServer {
 
     //단어 사전 초기화 메서드
     public void readText() throws IOException{
-        try(BufferedReader in = new BufferedReader(new FileReader("C:/Users/chj10/OneDrive/문서/카카오톡 받은 파일/dictionary.txt"))){
+        try(BufferedReader in = new BufferedReader(new FileReader("src/WordChain/dictionary.txt"))){
             String str;
             while((str=in.readLine())!=null){
                 wordList.add(str);
@@ -140,6 +140,7 @@ public class WordChainServer {
             }else{
                 stack.push(word);
                 try {
+                    clients.get(clientSocket).upScore();
                     gamewordbroadcast(word);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -180,6 +181,12 @@ public class WordChainServer {
                 writer.write("Game:"+ message);
                 writer.newLine();
                 writer.flush();
+
+                writer.write(clients.get(clientSocket).getUsername()+"님이 정답을 맞췄습니다.");
+                writer.write(clients.get(clientSocket).getUsername()+"님의 점수는 "+clients.get(clientSocket).getScore()+" 입니다.");
+                writer.newLine();
+                writer.flush();
+
             }
         }
 
