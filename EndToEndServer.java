@@ -1,18 +1,20 @@
 package endtoend;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
-public class EndToEndServer {
+public class WordChainServer {
 
-    private static List<Socket> clients = new ArrayList<>();
-    private static List<String> wordList = new ArrayList<>();
-    private static Stack<String> stack = new Stack<>();
+    private static List<Socket> clients = new ArrayList<>();//클라이언트 소켓 리스트
+    private static List<String> wordList = new ArrayList<>();//단어사전 리스트
+    private static Stack<String> stack = new Stack<>();//사용한 단어 스택
     private ServerSocket serverSocket;
-    public EndToEndServer() {
+    public WordChainServer() {
         try {
             readText();
+            //초기 단어 설정
             stack.push(wordList.get(0));
 
             serverSocket = new ServerSocket(12345);
@@ -20,12 +22,10 @@ public class EndToEndServer {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                // 클라이언트 처리를 위한 스레드 생성
                 clients.add(clientSocket);
                 System.out.println("클라이언트 연결됨: " + clientSocket);
 
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
-
                 new Thread(clientHandler).start();
             }
         } catch (IOException e) {
@@ -33,9 +33,9 @@ public class EndToEndServer {
         }
     }
 
-    //사전 초기화 메서드
+    //단어 사전 초기화 메서드
     public void readText() throws IOException{
-        try(BufferedReader in = new BufferedReader(new FileReader("C:/Users/chj10/OneDrive/문서/카카오톡 받은 파일/dictionary.txt"))){
+        try(BufferedReader in = new BufferedReader(new FileReader("src/endtoend/dictionary.txt"))){
             String str;
             while((str=in.readLine())!=null){
                 wordList.add(str);
@@ -47,7 +47,7 @@ public class EndToEndServer {
     }
 
     public static void main(String[] args) {
-        new EndToEndServer();
+        new WordChainServer();
     }
 
     private static class ClientHandler implements Runnable {
@@ -70,15 +70,15 @@ public class EndToEndServer {
                 String tryword;
                 while ((message = reader.readLine()) != null) {
 
-                    if (message.startsWith("Game:")) { // Game에서 온 문자인 경우
+                    if (message.startsWith("Game:")) { // gameInputField에서 온 문자인 경우
                         tryword = message.replace("Game:", "");//message에서 Game: 를 없애줌
                         logic(tryword);
-                    } else if(message.equals("GetTargetWord")) {
+                    } else if(message.equals("GetTargetWord:")) {
                         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
                         writer.write(stack.peek());
                         writer.newLine();
                         writer.flush();
-                    } else { // Chat에서 온 문자인 경우
+                    } else { // inputField에서 온 문자인 경우
                         chatbroadcast(message);
                     }
                 }
@@ -88,53 +88,38 @@ public class EndToEndServer {
                 if (!clientSocket.isClosed()) {
                     try {
                         clientSocket.close();
-                    } catch(IOException ex) {
+                    } catch (IOException ex) {
                         System.err.println("소켓 닫기 실패");
                     }
                 }
             }
-            System.out.println("run함수 끝");
         }
 
+        // 끝말잇기 조건을 구현한 메서드
         public void logic(String word) {
             String backword = stack.peek();
-            System.out.println(backword);
-            if (backword.charAt(backword.length() - 1)==word.charAt(0) && wordList.contains(word) && !stack.contains(word)){
+            if (backword.charAt(backword.length()-1) == word.charAt(0) && wordList.contains(word) && !stack.contains(word)) {
+                stack.push(word)
                 try {
                     gamewordbroadcast(word);
-                    stack.push(word);
-                }catch (IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-            //backword(기존단어), word(사용자가 입력한 단어)
-            //끝말잇기 로직구현
-            //1. backword(기존단어)의 마지막 글자와 word(사용자가 입력한 단어)의 첫글자가 같은지
-            //2. word가 wordList에 포함되어 있는지
-
-            //만족한다면 word를 매개변수로 gamewordbroadcast함수호출하고, stack에 word를 추가.
-            //TODO: pass(한방단어 포기)같은 기능은 구현 안됨. 생각보다 wordlist의 단어가 부족하게 느껴짐. 두음법칙은 구현 안됨.
-//            try {
-//                gamewordbroadcast(word);
-//            }catch (IOException e) {
-//                e.printStackTrace();
-//            }
         }
 
-        //inputField에서 보낸 문자를 다른 클라이언트들에게 전송하는 메서드
+        // 각 클라이언트들에게 채팅 전송
         private void chatbroadcast(String message) throws IOException{
             clients.removeIf(Socket::isClosed);
             for(Socket client : clients) {
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
-
                 writer.write(message);
                 writer.newLine();
                 writer.flush();
             }
         }
 
-        //GameField에서 보낸 문자를 다른 클라이언트들에게 전송하는 메서드
-        //이떄는 다른 클라이언트들에게 전송할 때 "Game:"을 더해서 전송
+        // 각 클라이언트들에게 바뀐 targetword 전송
         private void gamewordbroadcast(String message) throws IOException{
             clients.removeIf(Socket::isClosed);
             for(Socket client : clients) {
@@ -145,4 +130,5 @@ public class EndToEndServer {
             }
         }
     }
+
 }
