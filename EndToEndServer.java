@@ -99,7 +99,7 @@ public class EndToEndServer {
         public void logic(String word) {
             String backword = stack.peek();
             System.out.println(backword);
-            if (backword.charAt(backword.length() - 1)==word.charAt(0)&&wordList.contains(word)){
+            if (backword.charAt(backword.length() - 1)==word.charAt(0) && wordList.contains(word) && !stack.contains(word)){
                 try {
                     gamewordbroadcast(word);
                     stack.push(word);
