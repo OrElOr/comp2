@@ -23,7 +23,7 @@ public class ClientInfo implements Serializable {
     }
 
     public void upScore(int score) {
-        this.score+=score;
+        this.score += score;
     }
 
     public int getScore() {
