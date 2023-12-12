@@ -1,5 +1,4 @@
 package WordChain;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,9 +11,15 @@ public class WordChainServer {
     private static List<String> wordList = new ArrayList<>();//단어사전 리스트
     private static Stack<String> stack = new Stack<>();//사용한 단어 스택
     private ServerSocket serverSocket;
+    private static Map<String,String> duem=new HashMap<>();
+    private List<String> du = new ArrayList<>(Arrays.asList("롭","뉵","력", "랄","랏","림","률","랴","녁","릿","룰","례","릇","렁","뢰","롄","룡","니","냐","녀","뇨","뉴","라","래","로","르","류","료","리","려"));
+    private List<String> em = new ArrayList<>(Arrays.asList("놉","육","역", "날","낫","임","율","야","역","잇","눌","예","늣","넝","뇌","옌","용","이","야","여","요","유","나","내","노","느","유","요","이","여"));
     public WordChainServer() {
         try {
             readText();
+            for(int i=0;i<30;i++){
+                duem.put(du.get(i),em.get(i));
+            }
             //초기 단어 설정
             stack.push(wordList.get(0));
 
@@ -52,7 +57,7 @@ public class WordChainServer {
 
     //단어 사전 초기화 메서드
     public void readText() throws IOException{
-        try(BufferedReader in = new BufferedReader(new FileReader("src/WordChain/dictionary.txt"))){
+        try(BufferedReader in = new BufferedReader(new FileReader("C:/Users/chj10/OneDrive/문서/카카오톡 받은 파일/dictionary.txt"))){
             String str;
             while((str=in.readLine())!=null){
                 wordList.add(str);
@@ -118,7 +123,40 @@ public class WordChainServer {
             //backword(기존단어), word(사용자가 입력한 단어)
             //끝말잇기 로직구현
             //만족한다면 word를 매개변수로 gamewordbroadcast함수호출
-            if (backword.charAt(backword.length() - 1) != word.charAt(0)) {
+            String  backwordlast= String.valueOf(backword.charAt(backword.length() - 1));
+            String changebackwordlast="";
+            boolean isduem=false;
+            if(duem.containsKey(backwordlast)){     //TODO: 두음법칙인 경우 로직 한번 돌림
+                changebackwordlast=duem.get(backwordlast);
+                if (changebackwordlast.equals(word.charAt(0))) {
+                    try {
+                        sendMessageToClient(clientSocket, "틀렸습니다.");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else if(!wordList.contains(word)){
+                    try {
+                        sendMessageToClient(clientSocket, "사용할 수 없는 단어입니다.");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else if(stack.contains(word)){
+                    try {
+                        sendMessageToClient(clientSocket, "이미 사용된 단어입니다.");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    stack.push(word);
+                    waitClient(clientSocket);
+                    try {
+                        clients.get(clientSocket).upScore(word.length());
+                        gamewordbroadcast(word);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }       //TODO: 여기서부터는 두음적용 안했을때 로직 한번 돌림
+            }else if (changebackwordlast.equals(word.charAt(0))) {
                 try {
                     sendMessageToClient(clientSocket, "틀렸습니다.");
                 } catch (IOException e) {
@@ -147,8 +185,9 @@ public class WordChainServer {
                     e.printStackTrace();
                 }
             }
+
         }
-        
+
         private void waitClient(Socket clientSocket) {
             try {
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
@@ -159,7 +198,7 @@ public class WordChainServer {
                 e.printStackTrace();
             }
         }
-        
+
         private void sendMessageToClient(Socket clientSocket, String message) throws IOException {
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
             writer.write(message);
