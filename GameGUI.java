@@ -140,23 +140,45 @@ public class GameGUI extends JFrame{
         try {
             while (true) {
                 String message = reader.readLine();
-                if(message.startsWith("Game:")) {
+                if (message.startsWith("Game:")) {
                     //targetword로 setText
-                    tgw = message.replace("Game:","");//받은 message에서 Game:를 제거한 String
+                    tgw = message.replace("Game:", "");//받은 message에서 Game:를 제거한 String
                     targetword.setText(tgw);
-                    preanswer.append(tgw+", "); //위에서 받은 String을 상단 정답 textarea에 추가함
-                } else if (message.startsWith("Wait:")) {
-                        waitInput();
+                    preanswer.append(tgw + ", "); //위에서 받은 String을 상단 정답 textarea에 추가함
+                } else if (message.equals("WaitClient:")) {
+                    waitInput();
+                } else if (message.equals("GameEnd:Win:")) {
+                    chatArea.append("우승\n");
+                    showGameEndDialog(true);
+                    closeClient();
+                } else if(message.equals("GameEnd:Lose:")) {
+                    chatArea.append("패배\n");
+                    showGameEndDialog(false);
+                    closeClient();
                 } else {
-                    chatArea.append(message+"\n"); //받은 message를 chatArea에 추가함
-
+                    chatArea.append(message + "\n"); //받은 message를 chatArea에 추가함
                 }
             }
-        } catch (IOException e) {
+        } catch(IOException e){
             e.printStackTrace();
         }
     }
 
+    private void showGameEndDialog(boolean isWinner) {
+        String message = isWinner ? "축하합니다! 승리하셨습니다." : "아쉽지만 패배하셨습니다.";
+        JOptionPane.showMessageDialog(this, message, "게임 종료", JOptionPane.INFORMATION_MESSAGE);
+    }
+    private void closeClient() {
+        try {
+            reader.close();
+            writer.close();
+            //objectWriter.close();
+            //socket.close();
+            System.exit(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     //새로 들어온 클라이언트 targetword초기화 메서드
     public String initTargetword() {
         try {
@@ -178,7 +200,7 @@ public class GameGUI extends JFrame{
             public void run() {
                 gameinputField.setEditable(false);
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -187,3 +209,4 @@ public class GameGUI extends JFrame{
         }).start();
     }
 }
+
