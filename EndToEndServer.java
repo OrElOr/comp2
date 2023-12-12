@@ -1,5 +1,4 @@
 package endtoend;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -36,7 +35,7 @@ public class EndToEndServer {
 
     //사전 초기화 메서드
     public void readText() throws IOException{
-        try(BufferedReader in = new BufferedReader(new FileReader("src/endtoend/dictionary.txt"))){
+        try(BufferedReader in = new BufferedReader(new FileReader("C:/Users/chj10/OneDrive/문서/카카오톡 받은 파일/dictionary.txt"))){
             String str;
             while((str=in.readLine())!=null){
                 wordList.add(str);
@@ -47,10 +46,10 @@ public class EndToEndServer {
         }
     }
 
-     public static void main(String[] args) {
+    public static void main(String[] args) {
         new EndToEndServer();
     }
-    
+
     private static class ClientHandler implements Runnable {
         private Socket clientSocket;
         private BufferedReader reader;
@@ -99,9 +98,22 @@ public class EndToEndServer {
 
         public void logic(String word) {
             String backword = stack.peek();
+            System.out.println(backword);
+            if (backword.charAt(backword.length() - 1)==word.charAt(0)&&wordList.contains(word)){
+                try {
+                    gamewordbroadcast(word);
+                    stack.push(word);
+                }catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             //backword(기존단어), word(사용자가 입력한 단어)
             //끝말잇기 로직구현
-            //만족한다면 word를 매개변수로 gamewordbroadcast함수호출
+            //1. backword(기존단어)의 마지막 글자와 word(사용자가 입력한 단어)의 첫글자가 같은지
+            //2. word가 wordList에 포함되어 있는지
+
+            //만족한다면 word를 매개변수로 gamewordbroadcast함수호출하고, stack에 word를 추가.
+            //TODO: pass(한방단어 포기)같은 기능은 구현 안됨. 생각보다 wordlist의 단어가 부족하게 느껴짐. 두음법칙은 구현 안됨.
 //            try {
 //                gamewordbroadcast(word);
 //            }catch (IOException e) {
