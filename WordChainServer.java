@@ -139,6 +139,7 @@ public class WordChainServer {
 
             }else{
                 stack.push(word);
+                waitClient(clientSocket);
                 try {
                     clients.get(clientSocket).upScore(word.length());
                     gamewordbroadcast(word);
@@ -147,6 +148,18 @@ public class WordChainServer {
                 }
             }
         }
+        
+        private void waitClient(Socket clientSocket) {
+            try {
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                writer.write("Wait:");
+                writer.newLine();
+                writer.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        
         private void sendMessageToClient(Socket clientSocket, String message) throws IOException {
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
             writer.write(message);
