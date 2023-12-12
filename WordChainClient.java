@@ -57,3 +57,4 @@ public class WordChainClient {
         new WordChainClient();
     }
 }
+
