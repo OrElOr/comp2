@@ -22,8 +22,8 @@ public class ClientInfo implements Serializable {
         this.score = score;
     }
 
-    public void upScore() {
-        this.score++;
+    public void upScore(int score) {
+        this.score+=score;
     }
 
     public int getScore() {

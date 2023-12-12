@@ -140,7 +140,7 @@ public class WordChainServer {
             }else{
                 stack.push(word);
                 try {
-                    clients.get(clientSocket).upScore();
+                    clients.get(clientSocket).upScore(word.length());
                     gamewordbroadcast(word);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -183,7 +183,8 @@ public class WordChainServer {
                 writer.flush();
 
                 writer.write(clients.get(clientSocket).getUsername()+"님이 정답을 맞췄습니다.");
-                writer.write(clients.get(clientSocket).getUsername()+"님의 점수는 "+clients.get(clientSocket).getScore()+" 입니다.");
+                writer.write(clients.get(clientSocket).getUsername()+"님의 점수는 "+clients.get(clientSocket).getScore()
+                        +"(+"+stack.peek().length()+")"+" 입니다.");
                 writer.newLine();
                 writer.flush();
 
