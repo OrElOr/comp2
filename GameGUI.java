@@ -145,7 +145,7 @@ public class GameGUI extends JFrame{
                     tgw = message.replace("Game:","");//받은 message에서 Game:를 제거한 String
                     targetword.setText(tgw);
                     preanswer.append(tgw+", "); //위에서 받은 String을 상단 정답 textarea에 추가함
-                } else if (message.startsWith("Wait")) {
+                } else if (message.startsWith("Wait:")) {
                         waitInput();
                 } else {
                     chatArea.append(message+"\n"); //받은 message를 chatArea에 추가함
