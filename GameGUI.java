@@ -1,4 +1,4 @@
-package endtoend;
+package WordChain;
 
 import javax.swing.*;
 import java.awt.*;
