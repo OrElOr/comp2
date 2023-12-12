@@ -9,7 +9,7 @@ public class WordChainClient {
     private BufferedReader reader;
     private BufferedWriter writer;
     private String username;
-
+    private ObjectOutputStream objectWriter;
     public WordChainClient() {
         try {
             socket = new Socket("localhost", 12345);
@@ -17,9 +17,16 @@ public class WordChainClient {
 
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            objectWriter = new ObjectOutputStream(socket.getOutputStream());
 
             //유저 이름 저장
             setUserName();
+
+            //유저 정보 클래스 생성
+            ClientInfo myInfo = new ClientInfo(username);
+            objectWriter.writeObject(myInfo);
+            objectWriter.flush();
+
             //게임 GUI생성
             GameGUI gameGUI = new GameGUI(reader, writer, username);
             gameGUI.init();
