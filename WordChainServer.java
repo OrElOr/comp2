@@ -1,4 +1,5 @@
 package WordChain;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,7 +8,7 @@ import java.util.*;
 public class WordChainServer {
     private static Map<Socket, ClientInfo> clients = new HashMap<>();
 
-    //    private static List<Socket> clients = new ArrayList<>();//클라이언트 소켓 리스트
+    //private static List<Socket> clients = new ArrayList<>();//클라이언트 소켓 리스트
     private static List<String> wordList = new ArrayList<>();//단어사전 리스트
     private static Stack<String> stack = new Stack<>();//사용한 단어 스택
     private ServerSocket serverSocket;
@@ -20,6 +21,7 @@ public class WordChainServer {
             for(int i=0;i<30;i++){
                 duem.put(du.get(i),em.get(i));
             }
+
             //초기 단어 설정
             stack.push(wordList.get(0));
 
@@ -28,11 +30,10 @@ public class WordChainServer {
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
+
                 ObjectInputStream objectReader = new ObjectInputStream(clientSocket.getInputStream());
 
                 ClientInfo clientInfo = null;
-
-                System.out.println("clientInfo 받아오는중");
                 while (clientInfo == null) {
                     try {
                         clientInfo = (ClientInfo) objectReader.readObject();
@@ -40,10 +41,6 @@ public class WordChainServer {
                         e.printStackTrace();
                     }
                 }
-                System.out.println("받아오기 성공");
-                //제대로 됐는지 확인
-                System.out.println(clientInfo);
-
                 clients.put(clientSocket, clientInfo);
                 System.out.println("클라이언트 연결됨: " + clientSocket);
 
@@ -57,7 +54,7 @@ public class WordChainServer {
 
     //단어 사전 초기화 메서드
     public void readText() throws IOException{
-        try(BufferedReader in = new BufferedReader(new FileReader("C:/Users/chj10/OneDrive/문서/카카오톡 받은 파일/dictionary.txt"))){
+        try(BufferedReader in = new BufferedReader(new FileReader("src/WordChain/dictionary.txt"))){
             String str;
             while((str=in.readLine())!=null){
                 wordList.add(str);
@@ -121,77 +118,74 @@ public class WordChainServer {
         public void logic(String word) {
             String backword = stack.peek();
             //backword(기존단어), word(사용자가 입력한 단어)
-            //끝말잇기 로직구현
-            //만족한다면 word를 매개변수로 gamewordbroadcast함수호출
-            String  backwordlast= String.valueOf(backword.charAt(backword.length() - 1));
-            String changebackwordlast="";
-            boolean isduem=false;
-            if(duem.containsKey(backwordlast)){     //TODO: 두음법칙인 경우 로직 한번 돌림
-                changebackwordlast=duem.get(backwordlast);
+            String  backwordlast = String.valueOf(backword.charAt(backword.length() - 1));
+            String changebackwordlast = "";
+            boolean isduem = false;
+            if (duem.containsKey(backwordlast)){     //두음법칙인 경우 로직 한번 돌림
+                changebackwordlast = duem.get(backwordlast);
                 if (changebackwordlast.equals(word.charAt(0))) {
                     try {
                         sendMessageToClient(clientSocket, "틀렸습니다.");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }else if(!wordList.contains(word)){
+                } else if(!wordList.contains(word)){
                     try {
                         sendMessageToClient(clientSocket, "사용할 수 없는 단어입니다.");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }else if(stack.contains(word)){
+                } else if(stack.contains(word)){
                     try {
                         sendMessageToClient(clientSocket, "이미 사용된 단어입니다.");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }else{
+                } else{
                     stack.push(word);
                     waitClient(clientSocket);
                     try {
                         clients.get(clientSocket).upScore(word.length());
                         gamewordbroadcast(word);
+                        checkScore();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }       //TODO: 여기서부터는 두음적용 안했을때 로직 한번 돌림
-            }else if (changebackwordlast.equals(word.charAt(0))) {
+                }       //여기서부터는 두음적용 안했을때 로직 한번 돌림
+            } else if (changebackwordlast.equals(word.charAt(0))) {
                 try {
                     sendMessageToClient(clientSocket, "틀렸습니다.");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }else if(!wordList.contains(word)){
+            } else if(!wordList.contains(word)){
                 try {
                     sendMessageToClient(clientSocket, "사용할 수 없는 단어입니다.");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }else if(stack.contains(word)){
+            } else if(stack.contains(word)){
                 try {
                     sendMessageToClient(clientSocket, "이미 사용된 단어입니다.");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-            }else{
+            } else{
                 stack.push(word);
                 waitClient(clientSocket);
                 try {
                     clients.get(clientSocket).upScore(word.length());
                     gamewordbroadcast(word);
+                    checkScore();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-
         }
-
         private void waitClient(Socket clientSocket) {
             try {
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-                writer.write("Wait:");
+                writer.write("WaitClient:");
                 writer.newLine();
                 writer.flush();
             } catch (IOException e) {
@@ -208,7 +202,6 @@ public class WordChainServer {
 
         // 각 클라이언트들에게 채팅 전송
         private void chatbroadcast(String message) throws IOException{
-            //clients.removeIf(Socket::isClosed);
             for(Socket client : clients.keySet()) {
                 if (client.isClosed()) {
                     clients.remove(client);
@@ -222,46 +215,62 @@ public class WordChainServer {
         }
 
         // 각 클라이언트들에게 바뀐 targetword 전송
-        private void gamewordbroadcast(String message) throws IOException{
-            //clients.removeIf(Socket::isClosed);
-            for(Socket client : clients.keySet()) {
+        private void gamewordbroadcast(String message) throws IOException {
+            for (Socket client : clients.keySet()) {
                 if (client.isClosed()) {
                     clients.remove(client);
                     continue;
                 }
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
-                writer.write("Game:"+ message);
+                writer.write("Game:" + message);
                 writer.newLine();
                 writer.flush();
 
-                writer.write(clients.get(clientSocket).getUsername()+"님이 정답을 맞췄습니다.");
-                writer.write(clients.get(clientSocket).getUsername()+"님의 점수는 "+clients.get(clientSocket).getScore()
-                        +"(+"+stack.peek().length()+")"+" 입니다.");
+                writer.write(clients.get(clientSocket).getUsername() + "님이 정답을 맞췄습니다.");
+                writer.write(clients.get(clientSocket).getUsername() + "님의 점수는 " + clients.get(clientSocket).getScore() +
+                        "(+" + stack.peek().length() + ")" + " 입니다.");
                 writer.newLine();
                 writer.flush();
-
             }
         }
 
-//        private void chatbroadcast(String message) throws IOException{
-//            clients.removeIf(Socket::isClosed);
-//            for(Socket client : clients) {
-//                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
-//                writer.write(message);
-//                writer.newLine();
-//                writer.flush();
-//            }
-//        }
-//
-//        // 각 클라이언트들에게 바뀐 targetword 전송
-//        private void gamewordbroadcast(String message) throws IOException{
-//            clients.removeIf(Socket::isClosed);
-//            for(Socket client : clients) {
-//                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
-//                writer.write("Game:"+ message);
-//                writer.newLine();
-//                writer.flush();
-//            }
+        private void checkScore() throws IOException{
+            for(Socket client : clients.keySet()) {
+                if (client.isClosed()) {
+                    clients.remove(client);
+                    continue;
+                }
+
+                int score = clients.get(client).getScore();
+                if (score >= 2) {
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+                    writer.write("GameEnd:Win:");
+                    writer.newLine();
+                    writer.flush();
+                    for(Socket cli : clients.keySet()) {
+                        int sc = clients.get(cli).getScore();
+                        if(sc < 2) {
+                            BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(cli.getOutputStream()));
+                            wr.write("GameEnd:Lose:");
+                            wr.newLine();
+                            wr.flush();
+                        }
+                        closeClient(cli);
+                    }
+                    break;
+                }
+            }
+        }
+
+        private void closeClient(Socket client) {
+            try {
+                reader.close();
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
 }
