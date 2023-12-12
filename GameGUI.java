@@ -2,12 +2,9 @@ package endtoend;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 public class GameGUI extends JFrame{
     private BufferedReader reader;
@@ -40,7 +37,7 @@ public class GameGUI extends JFrame{
         inputField.addActionListener(e->{
             String chatword = inputField.getText();
             try {
-                writer.write(username+":"+chatword);
+                writer.write(username +" : "+ chatword);
                 writer.newLine();
                 writer.flush();
             } catch (IOException ioe) {
@@ -64,6 +61,10 @@ public class GameGUI extends JFrame{
 
         chatArea = new JTextArea();
         chatArea.setEditable(false);
+        //좌우 스크롤 제거
+        chatArea.setLineWrap(true); //자동 줄넘김
+        chatArea.setWrapStyleWord(true); // 줄넘길때 단어가 잘린다면 단어 전체 줄넘김
+
         scroll = new JScrollPane(chatArea);
 
         preanswer = new JTextArea(2,1);
@@ -80,6 +81,7 @@ public class GameGUI extends JFrame{
 
         //위치 가운데로
         targetword = new JLabel(initTargetword());
+        targetword.setFont(new Font("HYHeadLine",Font.BOLD,20));
         gameP.add(targetword,BorderLayout.CENTER);
         gameP.add(scroll2,BorderLayout.NORTH);
 
@@ -94,7 +96,6 @@ public class GameGUI extends JFrame{
         gameChatP.add(gameinputField, BorderLayout.CENTER);
 
         gameP.add(gameChatP, BorderLayout.SOUTH);
-
 
         //chatP 영역 아래 채팅 입력 부분.
         JPanel panel = new JPanel();
@@ -117,18 +118,13 @@ public class GameGUI extends JFrame{
 
         setVisible(true);
 
-
         try{ //입장 메세지 출력
-                writer.write(username+" 님이 입장했습니다.");
-                writer.newLine();
-                writer.flush();}
-            catch (IOException e){
-                e.printStackTrace();
+            writer.write(username+" 님이 입장했습니다.");
+            writer.newLine();
+            writer.flush();}
+        catch (IOException e){
+            e.printStackTrace();
         }
-
-
-
-
 
 
         // 서버로부터 메시지 수신을 위한 스레드 시작
@@ -143,7 +139,6 @@ public class GameGUI extends JFrame{
     public void receiveMessages() {
         try {
             while (true) {
-                System.out.println("recevieMessages 메서드 시작");
                 String message = reader.readLine();
                 if(message.startsWith("Game:")) {
                     //targetword로 setText
@@ -164,7 +159,7 @@ public class GameGUI extends JFrame{
     //새로 들어온 클라이언트 targetword초기화 메서드
     public String initTargetword() {
         try {
-            writer.write("GetTargetWord");
+            writer.write("GetTargetWord:");
             writer.newLine();
             writer.flush();
             // 스택에서 현재 타겟 단어를 읽음
@@ -176,4 +171,3 @@ public class GameGUI extends JFrame{
         return null;
     }
 }
-
