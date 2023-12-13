@@ -8,18 +8,16 @@ public class WordChainClient {
     private Socket socket;
     private BufferedReader reader;
     private BufferedWriter writer;
-    private String username;
     private ObjectOutputStream objectWriter;
+    private String username;
     public WordChainClient() {
         try {
             socket = new Socket("localhost", 12345);
-            System.out.println("서버에 연결됨");
 
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             objectWriter = new ObjectOutputStream(socket.getOutputStream());
 
-            //유저 이름 저장
             setUserName();
 
             //유저 정보 클래스 생성
@@ -27,14 +25,15 @@ public class WordChainClient {
             objectWriter.writeObject(myInfo);
             objectWriter.flush();
 
-            //게임 GUI생성
-            GameGUI gameGUI = new GameGUI(reader, writer, username);
-            gameGUI.init();
+            //GUI생성
+            GameGUI gameGUI = new GameGUI(socket, reader, writer, username);
+            gameGUI.setGUI();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    // 유저 이름 설정 메소드
     private void setUserName() {
         Boolean setUsername = false;
         while (!setUsername) {
@@ -57,4 +56,3 @@ public class WordChainClient {
         new WordChainClient();
     }
 }
-
