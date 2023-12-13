@@ -2,211 +2,223 @@ package WordChain;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-
+import java.net.Socket;
 public class GameGUI extends JFrame{
+    private Socket socket;
     private BufferedReader reader;
     private BufferedWriter writer;
 
-    private JTextField inputField,gameinputField;
-    private JTextArea chatArea,preanswer;
-    private JPanel chatP,gameP;
-    private JScrollPane scroll,scroll2;
+    private JTextField inputWord, inputChat;
+    private JTextArea preWord, chatArea;
+    private JPanel gameP, chatP;
+    private JScrollPane preWordscroll, chatScroll;
     private String username;
-    private JLabel targetword;
-    private String tgw;
+    private JLabel targetWord;
 
-    public GameGUI(BufferedReader reader, BufferedWriter writer, String username){
+    public GameGUI(Socket socket, BufferedReader reader, BufferedWriter writer, String username){
+        this.socket = socket;
         this.reader = reader;
         this.writer = writer;
         this.username = username;
     }
 
-    public void init() {
+    public void setGUI() {
         setTitle(username +"님의 끝말잇기 게임");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(400, 600);
-        setResizable(false);
         setLayout(new GridLayout(2,1));
 
-        inputField = new JTextField();
-        gameinputField = new JTextField();
-
-        inputField.addActionListener(e->{
-            String chatword = inputField.getText();
-            try {
-                writer.write(username +" : "+ chatword);
-                writer.newLine();
-                writer.flush();
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
+        inputWord = new JTextField();
+        inputWord.addActionListener(e->{
+            String word = inputWord.getText();
+            if (!word.isEmpty()) {
+                try {
+                    writer.write("Game:" + word);
+                    writer.newLine();
+                    writer.flush();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
             }
-            inputField.setText(""); // 엔터치고 textfield지우기
+            inputWord.setText("");
         });
 
-        gameinputField.addActionListener(e->{
-            String gameword = gameinputField.getText();
-            //예외처리
-            try {
-                writer.write("Game:" + gameword);
-                writer.newLine();
-                writer.flush();
-            } catch (IOException ioe){
-                ioe.printStackTrace();
+        inputChat = new JTextField();
+        inputChat.addActionListener(e->{
+            String chat = inputChat.getText();
+            if (!chat.isEmpty()) {
+                try {
+                    writer.write("Chat:" + username + " : " + chat);
+                    writer.newLine();
+                    writer.flush();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
             }
-            gameinputField.setText(""); // 엔터치고 textfield지우기
+            inputChat.setText("");
         });
 
-        chatArea = new JTextArea();
-        chatArea.setEditable(false);
-        //좌우 스크롤 제거
-        chatArea.setLineWrap(true); //자동 줄넘김
-        chatArea.setWrapStyleWord(true); // 줄넘길때 단어가 잘린다면 단어 전체 줄넘김
+        preWord = new JTextArea(2,1);
+        preWord.setFocusable(false);
+        preWord.setSize(400,100);
+        preWordscroll = new JScrollPane(preWord);
 
-        scroll = new JScrollPane(chatArea);
+        targetWord = new JLabel();
+        targetWord.setFont(new Font("HYHeadLine",Font.BOLD,20));
 
-        preanswer = new JTextArea(2,1);
-        preanswer.setFocusable(false);
-        preanswer.setSize(400,100);
-        scroll2 = new JScrollPane(preanswer);
-
-
+        JPanel inputWordP = new JPanel();
+        inputWordP.setLayout(new BorderLayout());
+        inputWordP.add(inputWord);
 
         gameP = new JPanel();
         gameP.setSize(400,300);
         gameP.setLayout(new BorderLayout());
         gameP.setBackground(Color.WHITE);
+        gameP.add(preWordscroll,BorderLayout.NORTH);
+        gameP.add(targetWord,BorderLayout.CENTER);
+        gameP.add(inputWordP, BorderLayout.SOUTH);
 
-        //위치 가운데로
-        targetword = new JLabel(initTargetword());
-        targetword.setFont(new Font("HYHeadLine",Font.BOLD,20));
-        gameP.add(targetword,BorderLayout.CENTER);
-        gameP.add(scroll2,BorderLayout.NORTH);
 
-        //timecount = new JLabel("timer");
-        //timecount.setPreferredSize(new Dimension(50,50));
-        //gameP.add(timecount,null);
-        //timecount.setLocation(200,200);
-        add(gameP);
+        chatArea = new JTextArea();
+        chatArea.setEditable(false);
+        chatArea.setLineWrap(true);
+        chatArea.setWrapStyleWord(true);
+        chatScroll = new JScrollPane(chatArea);
 
-        JPanel gameChatP = new JPanel();
-        gameChatP.setLayout(new BorderLayout());
-        gameChatP.add(gameinputField, BorderLayout.CENTER);
-
-        gameP.add(gameChatP, BorderLayout.SOUTH);
-
-        //chatP 영역 아래 채팅 입력 부분.
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout());
-        panel.add(inputField, BorderLayout.CENTER);
+        JPanel inputChatP = new JPanel();
+        inputChatP.setLayout(new BorderLayout());
+        inputChatP.add(inputChat);
 
         chatP = new JPanel();
         chatP.setSize(400,300);
-
         chatP.setLayout(new BorderLayout());
-        chatP.add(scroll, BorderLayout.CENTER); //스크롤 기능이 있는 textfiled 추가
-        chatP.add(panel, BorderLayout.SOUTH);
+        chatP.add(chatScroll, BorderLayout.CENTER);
+        chatP.add(inputChatP, BorderLayout.SOUTH);
+
+
+        add(gameP);
         add(chatP);
 
-        /*
-        frame.getContentPane().setLayout(new BorderLayout());
-        frame.getContentPane().add(chatArea, BorderLayout.CENTER);
-        frame.getContentPane().add(panel, BorderLayout.SOUTH);
-         */
-
+        setResizable(false);
         setVisible(true);
+        //창 종료시 closeClient() 호출
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                closeClient();
+            }
+        });
 
         try{ //입장 메세지 출력
-            writer.write(username+" 님이 입장했습니다.");
+            writer.write("Chat:"+ username +" 님이 입장했습니다.");
             writer.newLine();
             writer.flush();}
         catch (IOException e){
             e.printStackTrace();
         }
 
-
-        // 서버로부터 메시지 수신을 위한 스레드 시작
         new Thread(new Runnable() {
             @Override
             public void run() {
                 receiveMessages();
             }
         }).start();
+
+        initTargetword();
     }
 
     public void receiveMessages() {
         try {
-            while (true) {
-                String message = reader.readLine();
+            String message;
+            while ((message = reader.readLine()) != null) {
                 if (message.startsWith("Game:")) {
-                    //targetword로 setText
-                    tgw = message.replace("Game:", "");//받은 message에서 Game:를 제거한 String
-                    targetword.setText(tgw);
-                    preanswer.append(tgw + ", "); //위에서 받은 String을 상단 정답 textarea에 추가함
-                } else if (message.equals("WaitClient:")) {
-                    waitInput();
+                    String tgw = message.replace("Game:", "");//받은 message에서 Game:를 제거한 String
+                    targetWord.setText(tgw);
+                    preWord.append(tgw + ", "); //위에서 받은 String을 상단 정답 textarea에 추가함
+                } else if (message.startsWith("Chat:")) {
+                    String chat = message.replace("Chat:","");
+                    chatArea.append(chat + "\n"); //받은 message를 chatArea에 추가함
+                }
+                else if (message.equals("WaitClient:")) {
+                    waitInputWord();
                 } else if (message.equals("GameEnd:Win:")) {
-                    chatArea.append("우승\n");
-                    showGameEndDialog(true);
+                    chatArea.append("당신이 이겼습니다!");
+                    showResultDialog(true);
                     closeClient();
                 } else if(message.equals("GameEnd:Lose:")) {
-                    chatArea.append("패배\n");
-                    showGameEndDialog(false);
+                    showResultDialog(false);
                     closeClient();
-                } else {
-                    chatArea.append(message + "\n"); //받은 message를 chatArea에 추가함
+                } else if(message.startsWith("SetInitTargetWord:")){
+                    String tgw = message.replace("SetInitTargetWord:","");
+                    targetWord.setText(tgw);
                 }
             }
         } catch(IOException e){
-            e.printStackTrace();
+            if (!socket.isClosed()) {
+                    closeClient();
+            }
+        } finally {
+            System.out.println("스레드 종료");
+            System.exit(0);
         }
+
     }
 
-    private void showGameEndDialog(boolean isWinner) {
-        String message = isWinner ? "축하합니다! 승리하셨습니다." : "아쉽지만 패배하셨습니다.";
-        JOptionPane.showMessageDialog(this, message, "게임 종료", JOptionPane.INFORMATION_MESSAGE);
-    }
-    private void closeClient() {
+    //새로 들어온 클라이언트의 targetword초기화 메소드
+    public void initTargetword() {
         try {
-            reader.close();
-            writer.close();
-            //objectWriter.close();
-            //socket.close();
-            System.exit(0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    //새로 들어온 클라이언트 targetword초기화 메서드
-    public String initTargetword() {
-        try {
-            writer.write("GetTargetWord:");
+            writer.write("SetInitTargetWord:");
             writer.newLine();
             writer.flush();
-            // 스택에서 현재 타겟 단어를 읽음
-            String targetWord = reader.readLine();
-            return targetWord;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
     }
 
-    public void waitInput() {
+    //끝말잇기 성공 후 3초동안 입력을 제한하는 메소드
+    public void waitInputWord() {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                gameinputField.setEditable(false);
+                inputWord.setEditable(false);
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-                gameinputField.setEditable(true);
+                inputWord.setEditable(true);
             }
         }).start();
     }
-}
 
+    //승패 결과창 보여주는 메서드
+    private void showResultDialog(boolean isWinner) {
+        String message = isWinner ? "축하합니다! 승리하셨습니다." : "아쉽게도 패배하셨습니다.";
+        JOptionPane.showMessageDialog(this, message, "게임 종료", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void closeClient() {
+        if (!socket.isClosed()) {
+            try {
+                writer.write("Chat:" + username + "님이 접속을 종료하였습니다.");
+                writer.newLine();
+                writer.flush();
+
+                writer.write("Disconnect:");
+                writer.newLine();
+                writer.flush();
+
+                reader.close();
+                writer.close();
+                socket.close();
+                System.out.println("close완료");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
