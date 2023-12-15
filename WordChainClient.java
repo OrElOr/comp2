@@ -12,7 +12,7 @@ public class WordChainClient {
     private String username;
     public WordChainClient() {
         try {
-            socket = new Socket("localhost", 12345);
+            socket = new Socket("localhost", 5000);
 
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -27,7 +27,7 @@ public class WordChainClient {
 
             //GUI생성
             GameGUI gameGUI = new GameGUI(socket, reader, writer, username);
-            gameGUI.setGUI();
+            gameGUI.initGUI();
         } catch (IOException e) {
             e.printStackTrace();
         }
