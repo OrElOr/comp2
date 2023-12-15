@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.Socket;
+
 public class GameGUI extends JFrame{
     private Socket socket;
     private BufferedReader reader;
@@ -27,7 +28,7 @@ public class GameGUI extends JFrame{
         this.username = username;
     }
 
-    public void setGUI() {
+    public void initGUI() {
         setTitle(username +"님의 끝말잇기 게임");
         setSize(400, 600);
         setLayout(new GridLayout(2,1));
@@ -142,6 +143,7 @@ public class GameGUI extends JFrame{
                 } else if (message.startsWith("Chat:")) {
                     String chat = message.replace("Chat:","");
                     chatArea.append(chat + "\n"); //받은 message를 chatArea에 추가함
+                    scrollToBottom();
                 }
                 else if (message.equals("WaitClient:")) {
                     waitInputWord();
@@ -161,9 +163,6 @@ public class GameGUI extends JFrame{
             if (!socket.isClosed()) {
                     closeClient();
             }
-        } finally {
-            System.out.println("스레드 종료");
-            System.exit(0);
         }
 
     }
@@ -179,18 +178,26 @@ public class GameGUI extends JFrame{
         }
     }
 
+    private void scrollToBottom() {
+        JScrollBar verticalScrollBar = chatScroll.getVerticalScrollBar();
+        verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+    }
+
     //끝말잇기 성공 후 3초동안 입력을 제한하는 메소드
     public void waitInputWord() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 inputWord.setEditable(false);
+                inputWord.setFocusable(false);
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
                 inputWord.setEditable(true);
+                inputWord.setFocusable(true);
+                inputWord.requestFocus();
             }
         }).start();
     }
@@ -215,10 +222,11 @@ public class GameGUI extends JFrame{
                 reader.close();
                 writer.close();
                 socket.close();
-                System.out.println("close완료");
+                System.exit(0);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 }
+    
