@@ -3,36 +3,34 @@ package WordChain;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.*;
 
 public class WordChainServer {
     private static Map<Socket, ClientInfo> clients = new HashMap<>();
     private static List<String> wordList = new ArrayList<>();//단어사전 리스트
     private static Stack<String> usedWords = new Stack<>();//사용한 단어 스택
-    private static Map<String,String> duem = new HashMap<>(); //두음법칙 적용 단어
+    private static Map<Character, Character> duem = new HashMap<>(); //두음법칙 적용 단어
     private ServerSocket serverSocket;
-    private ObjectInputStream objectReader;
 
-    public WordChainServer() {
-        readWord();
+    public WordChainServer() throws IOException {
+        readWordList();
+        setDuem();
 
-        String[] basic = {"롭","뉵","력", "랄","랏","림","률","랴","녁","릿","룰","례","릇","렁","뢰",
-                    "롄","룡","니","냐","녀","뇨","뉴","라","래","로","르","류","료","리","려"};
-        String[] change = {"놉","육","역", "날","낫","임","율","야","역","잇","눌","예","늣","넝","뇌",
-                    "옌","용","이","야","여","요","유","나","내","노","느","유","요","이","여"};
-        for (int i=0;i<30;i++) {
-            duem.put(basic[i],change[i]);
-        }
-
-        //초기 단어 설정
-        usedWords.push(wordList.get(0));
+        //초기 끝말잇기 단어 설정
+        usedWords.push(wordList.get( (int)(Math.random() * (wordList.size()-1)) ));
 
         try {
-            serverSocket = new ServerSocket(12345);
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
+            serverSocket = new ServerSocket(5000);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        while (true) {
+            Socket clientSocket= null;
+            try {
+                clientSocket = serverSocket.accept();
 
-                objectReader = new ObjectInputStream(clientSocket.getInputStream());
+                ObjectInputStream objectReader = new ObjectInputStream(clientSocket.getInputStream());
 
                 ClientInfo clientInfo = null;
                 try {
@@ -41,33 +39,47 @@ public class WordChainServer {
                     e.printStackTrace();
                 }
 
-                System.out.println(clientInfo);
                 clients.put(clientSocket, clientInfo);
-                System.out.println("클라이언트 연결됨: " + clientSocket);
+                System.out.println("클라이언트 연결됨: " + clientInfo.getUsername());
 
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 new Thread(clientHandler).start();
+            } catch (SocketException e) {
+                clientSocket.close();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+
     }
 
     //단어 사전 초기화 메서드
-    public void readWord() {
+    public void readWordList() {
         try(BufferedReader in = new BufferedReader(new FileReader("src/WordChain/dictionary.txt"))){
             String str;
             while((str=in.readLine())!=null){
                 wordList.add(str);
             }
-            Collections.shuffle(wordList);
         }catch (IOException e){
             e.printStackTrace();
         }
     }
 
+    //두음 법칙 적용되기 전 문자를 key로 적용된 후 문자를 value로 저장하는 메소드
+    public void setDuem() {
+        char[] basic = {'롭','뉵','력', '랄','랏','림','률','랴','녁','릿','룰', '례','릇','렁','뢰',
+                '롄','룡','니','냐','녀','뇨','뉴','라','래','로','르','류','료','리','려'};
+        char[] change = {'놉','육','역', '날','낫','임','율','야','역','잇','눌','예','늣','넝','뇌',
+                '옌','용','이','야','여','요','유','나','내','노','느','유','요','이','여'};
+        for (int i=0; i<basic.length; i++) {
+            duem.put(basic[i],change[i]);
+        }
+    }
+
     public static void main(String[] args) {
-        new WordChainServer();
+        try {
+            new WordChainServer();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static class ClientHandler implements Runnable {
@@ -92,8 +104,7 @@ public class WordChainServer {
                 while ((message = reader.readLine()) != null) {
 
                     if (message.startsWith("Game:")) { // InputWord에서 온 문자인 경우
-                        String tryWord = message.replace("Game:", "");
-                        logic(tryWord);
+                        logic(message.replace("Game:", ""));
                     } else if (message.startsWith("Chat:")) {
                         chatBroadcast(message);
                     } else if (message.equals("SetInitTargetWord:")) {
@@ -108,24 +119,24 @@ public class WordChainServer {
                 closeClient();
             }
         }
-
+        
         // 끝말잇기 조건을 구현한 메서드
         public void logic(String word) {
             //targetWord 기존단어, word 유저가 입력한 단어
             String targetWord = usedWords.peek();
 
-            String lastTargetWord = ""+ targetWord.charAt(targetWord.length()-1);
-            String firstWord = ""+ word.charAt(0);
+            char lastTargetWord = targetWord.charAt(targetWord.length()-1);
+            char firstWord = word.charAt(0);
 
-            if (duem.containsKey(lastTargetWord)){ // 끝 글자가 두음법칙이 적용되는 경우
+            if (duem.containsKey(lastTargetWord)){ // 두음법칙이 적용되는 경우
                 //두음법칙을 적용하여 바꾼단어
-                String changeLastTargetWord = duem.get(lastTargetWord);
+                char changeLastTargetWord = duem.get(lastTargetWord);
 
                 if (!wordList.contains(word)) {
                     sendMessageToClient("--사용할 수 없는 단어입니다.--");
                 } else if(usedWords.contains(word)){
                     sendMessageToClient("--이미 사용된 단어입니다.--");
-                } else if(!lastTargetWord.equals(firstWord) && !changeLastTargetWord.equals(firstWord)){ // 두음법칙 적용 전/후 단어와 비교
+                } else if(!(lastTargetWord == firstWord) && !(changeLastTargetWord == firstWord)){ // 두음법칙 적용 전/후 단어와 비교
                     sendMessageToClient("--틀렸습니다.--");
                 } else {
                     usedWords.push(word);
@@ -143,7 +154,7 @@ public class WordChainServer {
                     sendMessageToClient("--사용할 수 없는 단어입니다.--");
                 } else if (usedWords.contains(word)) {
                     sendMessageToClient("--이미 사용된 단어입니다.--");
-                } else if (!lastTargetWord.equals(firstWord)) {
+                } else if (!(lastTargetWord == firstWord)) {
                     sendMessageToClient("--틀렸습니다.--");
                 } else {
                     usedWords.push(word);
@@ -188,7 +199,6 @@ public class WordChainServer {
                     writer.write(chat);
                     writer.newLine();
                     writer.flush();
-                    //writer.close();
             }
         }
 
@@ -205,7 +215,6 @@ public class WordChainServer {
                         "님의 점수는 "+ clients.get(clientSocket).getScore() +"(+"+ targetWord.length() +")점!");
                 writer.newLine();
                 writer.flush();
-                //writer.close();
             }
         }
 
@@ -213,18 +222,17 @@ public class WordChainServer {
         private void checkScore() throws IOException{
             for(Socket client : clients.keySet()) {
                 int score = clients.get(client).getScore();
-                if (score >= 2) {
+                if (score >= 100) {
                     BufferedWriter win = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
 
                     win.write("GameEnd:Win:");
                     win.newLine();
                     win.flush();
-                    //win.close();
 
                     String winner = clients.get(client).getUsername();
                     for(Socket cli : clients.keySet()) {
                         int sc = clients.get(cli).getScore();
-                        if(sc < 2) {
+                        if(sc < 100) {
                             BufferedWriter lose = new BufferedWriter(new OutputStreamWriter(cli.getOutputStream()));
 
                             lose.write("Chat:"+ winner +"님이 우승하였습니다!");
@@ -234,7 +242,6 @@ public class WordChainServer {
                             lose.write("GameEnd:Lose:");
                             lose.newLine();
                             lose.flush();
-                            //lose.close();
                         }
                     }
                     break;
@@ -245,12 +252,12 @@ public class WordChainServer {
         private void closeClient() {
             if (!clientSocket.isClosed()) {
                 try {
+                    System.out.println("클라이언트 연결종료 : "+ clients.get(clientSocket).getUsername());
                     clients.remove(clientSocket);
 
                     reader.close();
                     writer.close();
                     clientSocket.close();
-                    System.out.println("클라이언트 소켓 닫힘");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -260,3 +267,4 @@ public class WordChainServer {
     }
 
 }
+
