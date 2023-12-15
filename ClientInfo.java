@@ -2,7 +2,14 @@ package WordChain;
 
 import java.io.Serializable;
 
-//클라이언트의 정보(이름, 현재 점수)를 가진 클래스
+//*******************************************************************
+// # 01
+//*******************************************************************
+// Name : ClientInfo
+// Type : class
+// Description :  Client의 이름과 정보를 저장할 class
+//                생성자와 내부 데이터 get, set, up 동작이 구현되어 있다.
+//*******************************************************************
 public class ClientInfo implements Serializable {
     private String username;
     private int score;
