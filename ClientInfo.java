@@ -8,6 +8,7 @@ import java.io.Serializable;
 // Name : ClientInfo
 // Type : class
 // Description :  Client의 이름과 정보를 저장할 class
+//                Serializable을 구현하여 객체 직렬화, 역직렬화를 지원한다.
 //                생성자와 내부 데이터 get, set, up 동작이 구현되어 있다.
 //*******************************************************************
 public class ClientInfo implements Serializable {
@@ -43,4 +44,3 @@ public class ClientInfo implements Serializable {
         return "이름 : "+ username +" / 점수 : "+ score;
     }
 }
-
