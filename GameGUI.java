@@ -34,13 +34,14 @@ public class GameGUI extends JFrame{
     // Name : GameGUI
     // Type : 생성자
     // Description :  GameGUI Class의 생성자로서, WordChainClient에서  받은
-    //                socket, reader, writer, username으로 GUI를 초기화 한다.
+    //                socket, reader, writer, username으로 GameGUI를 초기화 한다.
     //*******************************************************************
     public GameGUI(Socket socket, BufferedReader reader, BufferedWriter writer, String username){
         this.socket = socket;
         this.reader = reader;
         this.writer = writer;
         this.username = username;
+        initGUI();
     }
 
 
@@ -298,4 +299,3 @@ public class GameGUI extends JFrame{
         }
     }
 }
-
