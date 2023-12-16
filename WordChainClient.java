@@ -26,7 +26,7 @@ public class WordChainClient {
     // Name : WordChainClient
     // Type : 생성자
     // Description :  reader, writer, username, objectWriter를 초기화 하고 서버와의 소켓통신을 담당한다.
-    //                입력받은 username으로 ClientInfo를 초기화하고 GameGUI를 초기화한다.
+    //                입력받은 username으로 ClientInfo를 생성하고 GameGUI를 초기화한다.
     //*******************************************************************
     public WordChainClient() {
         try {
@@ -45,7 +45,6 @@ public class WordChainClient {
 
             //GUI생성
             GameGUI gameGUI = new GameGUI(socket, reader, writer, username);
-            gameGUI.initGUI();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -84,4 +83,3 @@ public class WordChainClient {
         new WordChainClient();
     }
 }
-
